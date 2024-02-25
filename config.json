@@ -1,0 +1,30 @@
+{
+    "settings": [
+        {
+            "name": "Openai_Inference_Runner",
+            "protocol": "tcp",
+            "ip": "127.0.0.1",
+            "port": "5514",
+            "port_logger": "6514",
+            "enable_dryrun": "0",
+            "debug_output_cli": "1",
+            "api_key": "<<our api key>",
+            "model_name": "gpt-3.5-turbo",
+            "max_tokens": "450",
+            "temperature": "1.0",
+            "top_p": "0.5",
+            "frequency_penalty": "0.5",
+            "vectorstore_path": "../document_store/QDrant_vectorstore_demo",
+            "document_context_size": "3",
+            "dump_save_path": "saved_prompts/"
+        }
+    ],
+    "upstream_nodes": [
+        {
+            "name": "Main_Task",
+            "ip": "127.0.0.1",
+            "port_subscriber": "5500",
+            "subscriber_topic1": "comm_openai_inf_5514"
+        }
+    ]
+}
