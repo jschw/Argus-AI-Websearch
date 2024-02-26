@@ -1,4 +1,5 @@
 from argus_src.core import ArgusWebsearch
+import time
 
 # user_prompt = "What's the world's tallest building in 2023?"
 
@@ -13,52 +14,65 @@ user_prompt = "Is it true that an apple a day keeps the doctor away? Give me the
 
 search_engine = ArgusWebsearch()
 
-text_out, tokens_used = search_engine.run_research(input_prompt=user_prompt)
+first_cycle = True
 
-print("LLM response:")
-print(text_out)
-print("\nURLs:")
+while True:
+    inp = input("Input: ")
 
-# Print unique source URLs
-urls_added = []
-url_numbers = []
+    if inp == "quit": break
 
-src_num = 1
-for index, doc in df_rag_aggregated_results.iterrows():
+    if inp:
+        user_prompt = inp
+        
+        if first_cycle:
+            text_out, tokens_used = search_engine.run_full_research(input_prompt=user_prompt)
 
-    # Add URL only once
-    if doc['URL'] in urls_added:
-        # Source is alread added
-        # Get index num
-        src_idx = urls_added.index(doc['URL'])
+            print("AI response:")
+            print(text_out)
+            print("\nURLs:")
 
-        # Add source number to array
-        url_numbers[src_idx].append(str(src_num))
+            # Print unique source URLs
+            urls_added = []
+            url_numbers = []
 
-    else:
-        # Source is not present in array
-        urls_added.append(doc['URL'])
-        url_numbers.append([str(src_num)])
-    
-    src_num += 1
+            src_num = 1
+            for index, doc in search_engine.rag_context.iterrows():
 
-# Print URLs and source numbers to output
-i = 0
-for url_src in urls_added:
-    src_numbers = ', '.join(url_numbers[i])
+                # Add URL only once
+                if doc['URL'] in urls_added:
+                    # Source is alread added
+                    # Get index num
+                    src_idx = urls_added.index(doc['URL'])
 
-    print(f"{src_numbers}: {url_src}")
+                    # Add source number to array
+                    url_numbers[src_idx].append(str(src_num))
 
-    i += 1
+                else:
+                    # Source is not present in array
+                    urls_added.append(doc['URL'])
+                    url_numbers.append([str(src_num)])
+                
+                src_num += 1
 
+            # Print URLs and source numbers to output
+            i = 0
+            for url_src in urls_added:
+                src_numbers = ', '.join(url_numbers[i])
 
-print(f"\n--> Tokens used for stage 4 inference: {tokens_used_stage4}")
-print(f"--> Total tokens used for research: {tokens_used_stage1 + tokens_used_stage4}")
+                print(f"{src_numbers}: {url_src}")
 
-# Next Dialog messages
-conversation_stage4.add_message(Message(type=MsgType.USER, msg = "Please reformat your answer in markdown with linebreaks and add subtitles and/or lists if it makes sense."))
+                i += 1
 
-text_out, tokens_used_last_inference = llm.run_inference(conversation_stage4.create_prompt_dict(), llm_config.get_config())
-print("LLM response:")
-print(text_out)
-print(f"\n--> Tokens used for inference: {tokens_used_last_inference}")
+            print(f"\n--> Total tokens used for research: {tokens_used}\n")
+
+            first_cycle = False
+
+        else:
+            text_out, tokens_used = search_engine.append_and_run(input_prompt=user_prompt)
+
+            print("AI response:")
+            print(text_out)
+            print(f"\n--> Tokens used for inference: {tokens_used}\n")
+
+    time.sleep(0.01)
+

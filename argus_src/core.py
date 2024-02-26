@@ -1,6 +1,6 @@
-from llm_inference import LlmConfiguration, LlmInferenceEngine, LlmInfTypes
-from datatypes_llm import Conversation, Message, MsgType
-from utils import crawl_website
+from argus_src.llm_inference import LlmConfiguration, LlmInferenceEngine, LlmInfTypes
+from argus_src.datatypes_llm import Conversation, Message, MsgType
+from argus_src.utils import crawl_website
 
 from googlesearch import search
 
@@ -72,7 +72,11 @@ class ArgusWebsearch():
 
         self.llm = LlmInferenceEngine(LlmInfTypes.OPENAI, api_key = self.llm_config.get_api_key())
 
+        self.tokens_used_total = 0
+
         self.vectorstore = None
+
+        self.rag_context = None
 
 
     def run_stage1(self, prompt:str) -> list:
@@ -305,16 +309,30 @@ class ArgusWebsearch():
         return text_out, self.llm.token_used_last
 
 
-    def run_research(self, input_prompt:str) -> str:
+    def run_full_research(self, input_prompt:str) -> str:
 
         generated_queries, tokens_stage1 = self.run_stage1(prompt=input_prompt)
 
         website_content = self.run_stage2(queries=generated_queries)
 
-        rag_context = self.run_stage3(content=website_content, queries=generated_queries)
+        self.rag_context = self.run_stage3(content=website_content, queries=generated_queries)
 
-        llm_output, tokens_stage4 = self.run_stage4(context=rag_context, prompt=input_prompt)
+        llm_output, tokens_stage4 = self.run_stage4(context=self.rag_context, prompt=input_prompt)
 
-        tokens_total = self.llm.token_used_total
+        self.tokens_used_total = self.llm.token_used_total
 
-        return llm_output, tokens_total
+        return llm_output, self.tokens_used_total
+    
+
+    def append_and_run(self, input_prompt:str) -> str:
+        # Add new input to conversation
+        self.conversation_stage4.add_message(Message(type=MsgType.USER, msg = input_prompt))
+
+        # Run inference
+        llm_output, tokens_actual = self.llm.run_inference(self.conversation_stage4.create_prompt_dict(), self.llm_config.get_config())
+        self.conversation_stage4.add_message(Message(type=MsgType.ASSISTANT, msg = llm_output))
+
+        self.tokens_used_total = self.llm.token_used_total
+
+        return llm_output, self.llm.token_used_last
+
