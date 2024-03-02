@@ -1,14 +1,21 @@
+# Import the flet module
 import flet as ft
 
-from argus_src.core import ArgusWebsearch
+# Import the OpenAI library
+#import openai
 
+# Import the OpenAI API key from the config file
+#from config import OPENAI_API_KEY
+
+# Set the OpenAI API key
+#openai.api_key = OPENAI_API_KEY
 
 # Define a class called Chat that is a subclass of ft.UserControl
 class Chat(ft.UserControl):
 
     def build(self):
         # Create a heading text element
-        self.heading = ft.Text(value="Argus AI Webresearch", size=24)
+        self.heading = ft.Text(value="ChatGPT Chatbot", size=24)
         
         # Create a text input field for user prompts
         self.text_input = ft.TextField(hint_text="Enter your prompt", expand=True, multiline=True)
@@ -18,11 +25,6 @@ class Chat(ft.UserControl):
         
         # Enable scrolling in the chat interface
         self.scroll = True
-
-        # Init Argus core
-        self.search_engine = ArgusWebsearch()
-
-        self.first_cycle = True
         
         # Create the layout of the chat interface using the ft.Column container
         return ft.Column(
@@ -42,16 +44,14 @@ class Chat(ft.UserControl):
         )
     
     def btn_clicked(self, event):
-        # Send the user input to the Argus Core
-        self.output , self.tokens_used = self.search_engine.run_full_research(input_prompt=self.text_input.value)
+        # Send the user input to the ChatGPT API for completion
+        completion = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet."
+
+        # Get the output text from the API response
+        self.output = completion
         
         # Create a new Output object to display the chatbot response
-        if self.first_cycle:
-            result = Output(output_text=self.output, input_text=self.text_input.value, msg_index=1, output_delete=self.outputDelete, first_cycle=self.first_cycle)
-            self.first_cycle = False
-        else:
-            # TODO
-            pass
+        result = Output(self.output, self.text_input.value, self.outputDelete)
         
         # Add the Output object to the output column
         self.output_column.controls.append(result)
@@ -72,29 +72,25 @@ class Chat(ft.UserControl):
 
 # Define a class called Output that is a subclass of ft.UserControl
 class Output(ft.UserControl):
-    def __init__(self, output_text:str, input_text:str, msg_index:int, output_delete, first_cycle:bool):
+    def __init__(self, myoutput, mytext_input, myoutput_delete):
         super().__init__()
-        self.output = output_text 
-        self.input = input_text
-        self.myoutput_delete = output_delete
-        self.first_cycle = first_cycle
-        self.msg_index = msg_index
+        self.myoutput = myoutput 
+        self.mytext_input = mytext_input
+        self.myoutput_delete = myoutput_delete
 
     def build(self):
-
-        # Assemble markdown output
+        # self.md1 = "# Markdown Example\n[Link text Here](https://link-url-here.org)\n\nMarkdown allows you to easily include formatted text, images, and even formatted Dart code in your app.\n## Titles"
         
-        self.md1 = f"### > User:\n{self.input}\n### > Argus:\n{self.output}"
+        self.md1 = "### User:\nWhat's the world's tallest building in 2023\n ### Argus:\nAs of 2023, the tallest building in the world is the Burj Khalifa located in Dubai, UAE. It stands at a total height of 828 meters (2,717 feet) with 163 floors. The Burj Khalifa surpasses other notable skyscrapers such as Merdeka 118, Shanghai Tower, and Abraj Al Bait in terms of height (2). Adrian Smith of Skidmore, Owings and Merrill was the chief architect of the Burj Khalifa project, which was constructed by Samsung C&T (1).\n### Sources:\nToDo"
 
-        if self.first_cycle:
-            # If this is the first message -> add sources
-            self.md1 += f"\n### Sources:\nToDo"
-        
+        # Create a text element to display the chatbot response
+        self.output_display = ft.Text(value=self.myoutput, selectable=True)
         
         # Create a delete button to remove the chatbot response
-        if self.first_cycle:
-            self.delete_button = ft.IconButton(ft.icons.DELETE_OUTLINE_SHARP, on_click=self.delete)
+        self.delete_button = ft.IconButton(ft.icons.DELETE_OUTLINE_SHARP, on_click=self.delete)
         
+        # Create a container to display the user input
+        self.input_display = ft.Container(ft.Text(value=self.mytext_input), bgcolor=ft.colors.BLUE_GREY_50, padding=10)
 
         self.md_display = ft.Markdown(
                                         self.md1,
@@ -104,7 +100,7 @@ class Output(ft.UserControl):
                                     )
         
         # Create a column layout to arrange the elements
-        self.display_view = ft.Column(controls=[ self.md_display, self.delete_button])
+        self.display_view = ft.Column(controls=[self.input_display, self.output_display, self.md_display, self.delete_button])
 
         # Return the column layout as the UI representation of the Output class
         return self.display_view

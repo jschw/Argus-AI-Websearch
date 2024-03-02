@@ -29,6 +29,12 @@ class Message():
     def get_dict(self) -> dict:
         return {"role": self.type_str, "content": self.content}
     
+    def get_type(self) -> int:
+        return self.type_int
+    
+    def get_msg(self) -> str:
+        return self.content
+    
     def get_chatml(self) -> str:
         # TODO
         return
@@ -80,3 +86,9 @@ class Conversation():
 
     def shift_sequence(self):
         self.sequence_num += 1
+
+    def get_last_prompt(self) -> str:
+        for msg in self.messages:
+            if msg[0] == self.sequence_num and msg[1].get_type() == 2:
+                # If message is current sequence num and type 2 = USER
+                return msg[1].get_msg()

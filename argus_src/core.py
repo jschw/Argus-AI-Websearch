@@ -330,9 +330,12 @@ class ArgusWebsearch():
 
         # Run inference
         llm_output, tokens_actual = self.llm.run_inference(self.conversation_stage4.create_prompt_dict(), self.llm_config.get_config())
-        self.conversation_stage4.add_message(Message(type=MsgType.ASSISTANT, msg = llm_output))
+        self.conversation_stage4.add_message(Message(type=MsgType.ASSISTANT, msg = llm_output), finish_sequence=True)
 
         self.tokens_used_total = self.llm.token_used_total
 
         return llm_output, self.llm.token_used_last
+    
+    def get_last_prompt(self,) -> str:
+        return self.conversation_stage4.get_last_prompt()
 
