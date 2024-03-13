@@ -1,6 +1,7 @@
 .DS_Store
 api_key.txt
 RAG_output.csv
+no_git
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

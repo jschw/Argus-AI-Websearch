@@ -92,3 +92,11 @@ class Conversation():
             if msg[0] == self.sequence_num and msg[1].get_type() == 2:
                 # If message is current sequence num and type 2 = USER
                 return msg[1].get_msg()
+        return []
+            
+    def get_last_output(self) -> str:
+        for msg in self.messages:
+            if msg[0] == self.sequence_num and msg[1].get_type() == 3:
+                # If message is current sequence num and type 3 = ASSISTANT
+                return msg[1].get_msg()
+        return []

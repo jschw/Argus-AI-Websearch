@@ -3,6 +3,10 @@ import time
 
 # user_prompt = "What's the world's tallest building in 2023?"
 
+# user_prompt = "What is the reason why some stars are flickering?"
+
+# user_prompt = "Is the Bielefeld conspiracy real?"
+
 # user_prompt = "What was the tallest building in the world in the year 2019?"
 
 # user_prompt = "The Apple Watch is not visible on my new iPhone and I cannot connect it. How do I configure it for the new phone?"

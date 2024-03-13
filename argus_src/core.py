@@ -338,4 +338,7 @@ class ArgusWebsearch():
     
     def get_last_prompt(self,) -> str:
         return self.conversation_stage4.get_last_prompt()
+    
+    def get_last_output(self,) -> str:
+        return self.conversation_stage4.get_last_output()
 
