@@ -6,7 +6,7 @@
             "ip": "127.0.0.1",
             "port": "5514",
             "port_logger": "6514",
-            "enable_dryrun": "0",
+            "enable_dryrun": "1",
             "debug_output_cli": "1",
             "api_key": "<your api key>",
             "model_name": "gpt-3.5-turbo",

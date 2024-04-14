@@ -72,6 +72,8 @@ class Output(ft.UserControl):
         # Create a delete button to remove the chatbot response
         # if self.msg_index != 1:
         self.delete_button = ft.IconButton(ft.icons.DELETE_OUTLINE_SHARP, on_click=self.delete)
+
+        self.relate_button = ft.IconButton(ft.icons.REPLY_ROUNDED, on_click=self.delete)
         
 
         self.md_display = ft.Markdown(
@@ -85,13 +87,13 @@ class Output(ft.UserControl):
         self.circle_avatar_argus = ft.CircleAvatar(
                                                     content=ft.Text("A"),
                                                     color=ft.colors.WHITE,
-                                                    bgcolor=ft.colors.CYAN_ACCENT_400
+                                                    bgcolor=ft.colors.LIGHT_BLUE_ACCENT_700
                                                     )
 
         self.circle_avatar_user = ft.CircleAvatar(
                                                     content=ft.Text("U"),
                                                     color=ft.colors.WHITE,
-                                                    bgcolor=ft.colors.GREEN_ACCENT_400
+                                                    bgcolor=ft.colors.TEAL_ACCENT_700
                                                     )
         
         self.controls_row_user = ft.Container( content= ft.Row([
@@ -106,37 +108,39 @@ class Output(ft.UserControl):
                                                                     ),
                                                             ]),
                                                             padding=10,
-                                                            border_radius=10,
+                                                            border_radius=5,
                                                             # bgcolor=ft.colors.BLUE_GREY_100,
                                                             border=ft.border.all(1, ft.colors.GREY))
         
         self.controls_row_argus = ft.Container( content= ft.Row([
-                                                                            ft.Row([
-                                                                                self.circle_avatar_argus,
-                                                                                ft.Column(
-                                                                                            [
-                                                                                                
-                                                                                                ft.Text("Argus", weight="bold"),
-                                                                                                
-                                                                                            ],
-                                                                                            tight=False,
-                                                                                            spacing=5,
-                                                                                        ),
+                                                                    ft.Row([
+                                                                        self.circle_avatar_argus,
+                                                                        ft.Column(
+                                                                                    [
+                                                                                        
+                                                                                        ft.Text("Argus", weight="bold"),
+                                                                                        
+                                                                                    ],
+                                                                                    tight=False,
+                                                                                    spacing=5,
+                                                                                ),
 
-                                                                                ],
+                                                                        ],
 
-                                                                            ),
-                                                                            self.md_display
-                                                                    ],
+                                                                    ),
+                                                                    self.md_display
+                                                            ],
 
-                                                                    wrap=True),
+                                                            wrap=True),
                                                             padding=10,
-                                                            border_radius=10,
+                                                            border_radius=5,
                                                             # bgcolor=ft.colors.BLUE_GREY_100,
                                                             border=ft.border.all(1, ft.colors.GREY))
         
+        delete_relate_buttons = ft.Row([self.relate_button, self.delete_button])
+        
         # Create a column layout to arrange the elements
-        self.display_view = ft.Column(controls=[ self.controls_row_user, self.controls_row_argus, self.delete_button])
+        self.display_view = ft.Column(controls=[ self.controls_row_user, self.controls_row_argus, delete_relate_buttons])
 
         # Return the column layout as the UI representation of the Output class
         return self.display_view
@@ -183,15 +187,17 @@ def main(page: ft.page):
             page.update()
 
             # Send the user input to the Argus Core
-            output , tokens_used = search_engine.run_full_research(input_prompt=text_input.value)
+            #output , tokens_used = search_engine.run_full_research(input_prompt=text_input.value)
 
             # Get context used for answer
-            sources = search_engine.rag_context
+            #sources = search_engine.rag_context
 
-            """output = f"HeyHey \n\n| Source no. | URL | \n| --- | --- | \n| 123 | Test |"
+            output = f"HeyHey \n\n| Source no. | URL | \n| --- | --- | \n| 123 | Test |"
             tokens_used = 123
             sources = []
-            sources.append({"Test": "123"})"""
+            sources.append(["Test", "123"])
+            sources = DataFrame(sources, columns =['URL', 'Content'])
+
             
             # Create a new Output object to display the chatbot response
             result = Output(
@@ -236,6 +242,9 @@ def main(page: ft.page):
     # Send button
     send_btn = ft.IconButton(icon=ft.icons.SEND_ROUNDED, on_click=btn_clicked)
 
+    # Restart button
+    new_btn = ft.IconButton(icon=ft.icons.RESTART_ALT_ROUNDED, on_click=btn_clicked)
+
     # Create an empty column to hold the output elements
     output_column = ft.ListView(expand=True,
                                     spacing=10,
@@ -260,6 +269,7 @@ def main(page: ft.page):
                                         controls=[
                                                     text_input,
                                                     send_btn,
+                                                    new_btn
                                                 ],
                                     ))
     

@@ -20,3 +20,4 @@ Funktionen:
 
 - PDF hinzufügen, manuell -> Zu Vecstore hinzufügen (addTexts)
 
+- Neuen Prompt beziehen auf bestimmte Antwort
