@@ -17,6 +17,8 @@ import time
 
 user_prompt = "Is it true that an apple a day keeps the doctor away? Give me the reason for the answer."
 
+user_prompt = "How to grow Cannabis? Name the steps how to grow cannabis on the balcony and recommend three suitable varieties."
+
 
 search_engine = ArgusWebsearch()
 

@@ -1,0 +1,22 @@
+Funktionen: 
+
+- Alles neu generieren (gleicher Ausgangsprompt)
+
+- Nachfragen mit neuer Websuche und Erweiterung vorhandener Vecstore
+
+- Neu crawlen und Vecstore neu erstellen
+
+- speichern
+
+- laden
+
+- Export von Quellen für Prompt
+
+- Export alle Quellen
+
+- Ausgabe Quellen/URLs
+
+- URL hinzufügen, manuell -> Zu Vecstore hinzufügen (addTexts)
+
+- PDF hinzufügen, manuell -> Zu Vecstore hinzufügen (addTexts)
+
