@@ -1,0 +1,107 @@
+Example log.
+
+Prompt: How to make a perfect smoothie?
+
+Output:
+
+Running inference...
+
+--> Generated search queries: 
+1: Best smoothie recipes for beginners
+2: How to make a healthy smoothie at home
+3: Smoothie making tips and tricks
+
+--> Tokens used for stage 1 inference: 590
+
+==> Finished stage 1
+
+--> Top rated result URLs:
+
+1: https://www.nutribullet.com/blog/top-10-essential-smoothies-for-beginners/
+2: https://www.allrecipes.com/recipe/23553/basic-fruit-smoothie/
+3: https://www.prevention.com/food-nutrition/a20499756/20-super-healthy-smoothie-recipes/
+4: https://www.prevention.com/food-nutrition/recipes/a34317826/stress-less-smoothie-recipe/
+5: https://www.tastingtable.com/1191339/tips-you-need-for-a-perfect-smoothie/
+6: https://www.stemilt.com/stem-blog/the-dos-donts-of-making-smoothies/
+
+- Crawling: https://www.nutribullet.com/blog/top-10-essential-smoothies-for-beginners/
+✅ Success
+- Crawling: https://www.allrecipes.com/recipe/23553/basic-fruit-smoothie/
+❌ Content not text/html for https://www.allrecipes.com/recipe/23553/basic-fruit-smoothie/
+- Crawling: https://www.prevention.com/food-nutrition/a20499756/20-super-healthy-smoothie-recipes/
+✅ Success
+- Crawling: https://www.prevention.com/food-nutrition/recipes/a34317826/stress-less-smoothie-recipe/
+✅ Success
+- Crawling: https://www.tastingtable.com/1191339/tips-you-need-for-a-perfect-smoothie/
+✅ Success
+- Crawling: https://www.stemilt.com/stem-blog/the-dos-donts-of-making-smoothies/
+
+==> Finished stage 2
+
+--> Performing search for query 1: '1'
+--> Performing search for query 2: '2'
+--> Performing search for query 3: '3'
+                                                 URL                                            Content
+0  https://www.prevention.com/food-nutrition/a204...  **Meet the Expert:** Andrea Mathis, M.A., R.D....
+1  https://www.tastingtable.com/1191339/tips-you-...  While smoothies are valued for their convenien...
+2  https://www.prevention.com/food-nutrition/a204...  Healthy smoothie recipes can provide an ideal ...
+3  https://www.tastingtable.com/1191339/tips-you-...  Smoothies are a low-effort way to make sure yo...
+4  https://www.tastingtable.com/1191339/tips-you-...  Ilona Kozhevnikova/Shutterstock \n\n\nEver won...
+
+==> Finished stage 3, 5 document chunks in context
+
+Running inference...
+
+
+==> Finished stage 4, going to output results.
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'This is a helpful assistant that compiles information, answers questions or generally carries out what is requested in the user input.\n'}
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'The assistant uses the information provided in the following context to perform the task requested in the user input.\n'}
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'The context contains several pieces of information, which are separated by ## .\n'}
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'Each context block contains its number, the source URL and the source content. The source content is the information which should be used to perform the task.\n'}
+
+Idx: 1 , Conent: {'role': 'system', 'content': "Context:\n\n##\nSource No: 1\nSource URL: https://www.prevention.com/food-nutrition/a20499756/20-super-healthy-smoothie-recipes/\nSource Content: **Meet the Expert:** Andrea Mathis, M.A., R.D.N., L.D. is an Alabama-based registered dietitian. She has worked in clinical, public health, and long-term care settings, and shares nutritious recipes and advice on her site, Beautiful Eats & Things. She is also the author of *The Complete Book of Smoothies: 115 Health Recipes to Nourish, Health, and Energize**.*\n\nPlus, several of these recipes are from *Smoothies & Juices*, the book from *Prevention’*s Healing Kitchen series. Give these recipes a try, and once you learn what flavors and textures you like (or dislike), you can confidently start experimenting to create your own perfect blend.\n\n\n\n---\n\n\n##\nSource No: 2\nSource URL: https://www.tastingtable.com/1191339/tips-you-need-for-a-perfect-smoothie/\nSource Content: While smoothies are valued for their convenience and fuss-free preparation, presentation matters — ask anyone who's ever posted a photo of their smoothie on Instagram. If you're not short on time or are celebrating a special occasion with a smoothie, there is a neat bartending trick that will make it look gorgeous. First, blend two or more smoothies that have complementary flavors and contrasting colors. Put your base layer in, and then pour the next one over a spoon that's turned upside down. Repeat until you reach the top of the glass. Be sure to pour slowly and evenly so that the different layers are distinct. If desired, you can also add toppings, like granola or fruit, before serving.\n\n\n##\nSource No: 3\nSource URL: https://www.prevention.com/food-nutrition/a20499756/20-super-healthy-smoothie-recipes/\nSource Content: Healthy smoothie recipes can provide an ideal fix for anyone who is looking for something nutritious to eat, stat. Throw a few ingredients into a blender, grab a glass and straw, and you're ready to go in just a few seconds. Easy, right? \n\nBut not all smoothies will help you meet your nutritional goals. In fact, many pre-made smoothies (and smoothie bowls) you find at the store are loaded with excess sugar and don't have enough fiber, protein or fat to keep you satiated. \n\nGood news: If you’re looking for healthy smoothies for weight loss or just a better way to start your day, we have expert-approved tips, tricks, and ingredients to toss into your blender ASAP.\n\n\n##\nSource No: 4\nSource URL: https://www.tastingtable.com/1191339/tips-you-need-for-a-perfect-smoothie/\nSource Content: Smoothies are a low-effort way to make sure you get enough nutrients. For one, they can increase your dietary fiber intake, which is essential considering most Americans get only half the amount they should, (per University of California San Francisco). However, simply mixing fruits and liquids is one of the biggest mistakes people make with smoothies. Instead, you should try to mix & match different food groups — fruits, vegetables, healthy fats, and proteins. For fiber, use whole grains such as oats or bran. Fruits, vegetables, and berries will also add fiber, as well as vitamins and antioxidants. Healthy fats can be obtained from avocados, nut butter, flax, chia, and hemp seeds. Finally,\n\n\n##\nSource No: 5\nSource URL: https://www.tastingtable.com/1191339/tips-you-need-for-a-perfect-smoothie/\nSource Content: Ilona Kozhevnikova/Shutterstock \n\n\nEver wondered why your homemade smoothies don't turn out as good as a restaurant's? The main secret to their flawless thick texture is a powerful, restaurant-grade blender. So if you're a real smoothie fan, you might want to splurge on a high-performance smoothie machine (some say a Ninja Personal Blender stands above the rest). While it can be costly, such an appliance will help you forget all the disappointing, grainy, lumpy drinks you used to make at home and save money on having your smoothies elsewhere.\n"}
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'Provide step by step reasoning and mark all the places in the answer with the numbers of the information used.\n'}
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'Do not refer to the source directly or output its URL, only output the number of the source in brackets like (2).\n'}
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'Provide a continuous text with linebreaks in a scientific tone.\n'}
+
+Idx: 1 , Conent: {'role': 'user', 'content': 'How to make a perfect smoothie?'}
+
+Idx: 1 , Conent: {'role': 'assistant', 'content': "To make a perfect smoothie, there are several key steps to follow based on expert advice from various sources:\n\n1. Start by ensuring you have the right equipment. A powerful, restaurant-grade blender is recommended for achieving a flawless thick texture in your smoothies (5).\n\n2. Choose a variety of ingredients that provide a balance of flavors, textures, and nutrients. Consider mixing fruits, vegetables, healthy fats, proteins, and whole grains to create a well-rounded smoothie (4).\n\n3. Pay attention to presentation if you want to make your smoothie visually appealing. You can create layers in your smoothie by blending different flavors with contrasting colors and pouring them carefully into the glass (2).\n\n4. Be mindful of the nutritional content of your smoothie. Avoid pre-made options that may be high in sugar and lacking in essential nutrients like fiber, protein, and fats (3).\n\n5. Experiment with different combinations of ingredients to find what you enjoy most and feel free to get creative with your own unique blends once you've discovered your preferences (1).\n\nBy following these steps and incorporating tips from experts, you can create a perfect smoothie that is not only delicious but also nutritious and visually pleasing."}
+
+None
+Running inference...
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'This is a helpful assistant that compiles information, answers questions or generally carries out what is requested in the user input.\n'}
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'The assistant uses the information provided in the following context to perform the task requested in the user input.\n'}
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'The context contains several pieces of information, which are separated by ## .\n'}
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'Each context block contains its number, the source URL and the source content. The source content is the information which should be used to perform the task.\n'}
+
+Idx: 1 , Conent: {'role': 'system', 'content': "Context:\n\n##\nSource No: 1\nSource URL: https://www.prevention.com/food-nutrition/a20499756/20-super-healthy-smoothie-recipes/\nSource Content: **Meet the Expert:** Andrea Mathis, M.A., R.D.N., L.D. is an Alabama-based registered dietitian. She has worked in clinical, public health, and long-term care settings, and shares nutritious recipes and advice on her site, Beautiful Eats & Things. She is also the author of *The Complete Book of Smoothies: 115 Health Recipes to Nourish, Health, and Energize**.*\n\nPlus, several of these recipes are from *Smoothies & Juices*, the book from *Prevention’*s Healing Kitchen series. Give these recipes a try, and once you learn what flavors and textures you like (or dislike), you can confidently start experimenting to create your own perfect blend.\n\n\n\n---\n\n\n##\nSource No: 2\nSource URL: https://www.tastingtable.com/1191339/tips-you-need-for-a-perfect-smoothie/\nSource Content: While smoothies are valued for their convenience and fuss-free preparation, presentation matters — ask anyone who's ever posted a photo of their smoothie on Instagram. If you're not short on time or are celebrating a special occasion with a smoothie, there is a neat bartending trick that will make it look gorgeous. First, blend two or more smoothies that have complementary flavors and contrasting colors. Put your base layer in, and then pour the next one over a spoon that's turned upside down. Repeat until you reach the top of the glass. Be sure to pour slowly and evenly so that the different layers are distinct. If desired, you can also add toppings, like granola or fruit, before serving.\n\n\n##\nSource No: 3\nSource URL: https://www.prevention.com/food-nutrition/a20499756/20-super-healthy-smoothie-recipes/\nSource Content: Healthy smoothie recipes can provide an ideal fix for anyone who is looking for something nutritious to eat, stat. Throw a few ingredients into a blender, grab a glass and straw, and you're ready to go in just a few seconds. Easy, right? \n\nBut not all smoothies will help you meet your nutritional goals. In fact, many pre-made smoothies (and smoothie bowls) you find at the store are loaded with excess sugar and don't have enough fiber, protein or fat to keep you satiated. \n\nGood news: If you’re looking for healthy smoothies for weight loss or just a better way to start your day, we have expert-approved tips, tricks, and ingredients to toss into your blender ASAP.\n\n\n##\nSource No: 4\nSource URL: https://www.tastingtable.com/1191339/tips-you-need-for-a-perfect-smoothie/\nSource Content: Smoothies are a low-effort way to make sure you get enough nutrients. For one, they can increase your dietary fiber intake, which is essential considering most Americans get only half the amount they should, (per University of California San Francisco). However, simply mixing fruits and liquids is one of the biggest mistakes people make with smoothies. Instead, you should try to mix & match different food groups — fruits, vegetables, healthy fats, and proteins. For fiber, use whole grains such as oats or bran. Fruits, vegetables, and berries will also add fiber, as well as vitamins and antioxidants. Healthy fats can be obtained from avocados, nut butter, flax, chia, and hemp seeds. Finally,\n\n\n##\nSource No: 5\nSource URL: https://www.tastingtable.com/1191339/tips-you-need-for-a-perfect-smoothie/\nSource Content: Ilona Kozhevnikova/Shutterstock \n\n\nEver wondered why your homemade smoothies don't turn out as good as a restaurant's? The main secret to their flawless thick texture is a powerful, restaurant-grade blender. So if you're a real smoothie fan, you might want to splurge on a high-performance smoothie machine (some say a Ninja Personal Blender stands above the rest). While it can be costly, such an appliance will help you forget all the disappointing, grainy, lumpy drinks you used to make at home and save money on having your smoothies elsewhere.\n"}
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'Provide step by step reasoning and mark all the places in the answer with the numbers of the information used.\n'}
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'Do not refer to the source directly or output its URL, only output the number of the source in brackets like (2).\n'}
+
+Idx: 1 , Conent: {'role': 'system', 'content': 'Provide a continuous text with linebreaks in a scientific tone.\n'}
+
+Idx: 1 , Conent: {'role': 'user', 'content': 'How to make a perfect smoothie?'}
+
+Idx: 1 , Conent: {'role': 'assistant', 'content': "To make a perfect smoothie, there are several key steps to follow based on expert advice from various sources:\n\n1. Start by ensuring you have the right equipment. A powerful, restaurant-grade blender is recommended for achieving a flawless thick texture in your smoothies (5).\n\n2. Choose a variety of ingredients that provide a balance of flavors, textures, and nutrients. Consider mixing fruits, vegetables, healthy fats, proteins, and whole grains to create a well-rounded smoothie (4).\n\n3. Pay attention to presentation if you want to make your smoothie visually appealing. You can create layers in your smoothie by blending different flavors with contrasting colors and pouring them carefully into the glass (2).\n\n4. Be mindful of the nutritional content of your smoothie. Avoid pre-made options that may be high in sugar and lacking in essential nutrients like fiber, protein, and fats (3).\n\n5. Experiment with different combinations of ingredients to find what you enjoy most and feel free to get creative with your own unique blends once you've discovered your preferences (1).\n\nBy following these steps and incorporating tips from experts, you can create a perfect smoothie that is not only delicious but also nutritious and visually pleasing."}
+
+Idx: 2 , Conent: {'role': 'user', 'content': 'Please format your answer in markdown.'}
+
+Idx: 2 , Conent: {'role': 'assistant', 'content': '1. **Equipment:** Start by ensuring you have a powerful, restaurant-grade blender for a flawless texture (Source 5).\n\n2. **Ingredients:** Mix fruits, vegetables, healthy fats, proteins, and whole grains for a balanced smoothie (Source 4).\n\n3. **Presentation:** Create visually appealing layers by blending different flavors with contrasting colors (Source 2).\n\n4. **Nutrition:** Avoid pre-made options high in sugar; ensure your smoothie is nutrient-rich with fiber, protein, and fats (Source 3).\n\n5. **Experiment:** Find your favorite combinations and get creative with unique blends (Source 1).'}
+
+None
+
+Delete Last answer, output index = 1.

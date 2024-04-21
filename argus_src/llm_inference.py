@@ -15,17 +15,28 @@ class LlmConfiguration():
         f.close()
         return tmp_file
 
-    def get_config(self) -> dict:
+    def get_llm_config(self) -> dict:
         return {
-                    "temp": float(self.config_store['settings'][0]['temperature']),
-                    "model": self.config_store['settings'][0]['model_name'],
-                    "top_p": float(self.config_store['settings'][0]['top_p']),
-                    "freq_penalty": float(self.config_store['settings'][0]['frequency_penalty']),
-                    "max_tokens": int(self.config_store['settings'][0]['max_tokens'])
+                    "temp": float(self.config_store['llm_settings'][0]['temperature']),
+                    "model": self.config_store['llm_settings'][0]['model_name'],
+                    "top_p": float(self.config_store['llm_settings'][0]['top_p']),
+                    "freq_penalty": float(self.config_store['llm_settings'][0]['frequency_penalty']),
+                    "max_tokens": int(self.config_store['llm_settings'][0]['max_tokens'])
+                }
+    
+    def get_conversation_config(self) -> dict:
+        return {
+                    "stage_1_depth": int(self.config_store['conversation_settings'][0]['stage_1_depth']),
+                    "stage_2_depth": int(self.config_store['conversation_settings'][0]['stage_2_depth']),
+                    "stage_3_chunksize": int(self.config_store['conversation_settings'][0]['stage_3_chunksize']),
+                    "stage_3_depth": int(self.config_store['conversation_settings'][0]['stage_3_depth']),
+                    "enable_debug_output_cli": bool(int(self.config_store['conversation_settings'][0]['enable_debug_output_cli'])),
+                    "add_full_context": bool(int(self.config_store['conversation_settings'][0]['add_full_context_always'])),
+                    "dump_save_path": self.config_store['conversation_settings'][0]['dump_save_path'],
                 }
     
     def get_api_key(self) -> str:
-        return self.config_store['settings'][0]['api_key']
+        return self.config_store['llm_settings'][0]['api_key']
 
 
 class LlmInfTypes(IntEnum):

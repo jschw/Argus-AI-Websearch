@@ -46,18 +46,6 @@ enable_context = True
 
 config_file = "config.json"
 
-# stage 1: Generating search queries
-# stage 2: Aggregating data with websearch + crawling
-# stage 3: Build vecstore + get relevant context with similarity search
-# stage 4: Summarize context / perform task described in original prompt
-
-stage_1_depth = 3  # Generate 3 search queries
-stage_2_depth = 5  # Load 5 top rated websites
-stage_3_chunksize = 700  # Size of each content chunk is 500 Token
-stage_3_depth = 3  # Add 3 chunks of each vecstore search result to content.
-                   # Example: stage_3_depth * stage_3_depth = chunk count in context
-                   # Example: 3 * 3 = 9 chunks * 500 token = 4500 token context
-
 enableDryRun = False
 
 class ArgusWebsearch():
@@ -66,11 +54,28 @@ class ArgusWebsearch():
 
         # ==== Load configuration file ====
 
-        self.llm_config = LlmConfiguration(config_file)
+        self.app_config = LlmConfiguration(config_file)
+        self.conversation_conf = self.app_config.get_conversation_config()
+        self.llm_conf = self.app_config.get_llm_config()
+
+        # ==== Load configuration parameters =====
+
+        # stage 1: Generating search queries
+        # stage 2: Aggregating data with websearch + crawling
+        # stage 3: Build vecstore + get relevant context with similarity search
+        # stage 4: Summarize context / perform task described in original prompt
+
+        self.stage_1_depth = self.conversation_conf['stage_1_depth']  # Generate 3 search queries
+        self.stage_2_depth = self.conversation_conf['stage_2_depth']  # Load 5 top rated websites
+        self.stage_3_chunksize = self.conversation_conf['stage_3_chunksize']  # Size of each content chunk is 500 Token
+        self.stage_3_depth = self.conversation_conf['stage_3_depth']  # Add 3 chunks of each vecstore search result to content.
+                        # Example: stage_3_depth * stage_3_depth = chunk count in context
+                        # Example: 3 * 3 = 9 chunks * 500 token = 4500 token context
+
 
         # ==== Init inference engine ====
 
-        self.llm = LlmInferenceEngine(LlmInfTypes.OPENAI, api_key = self.llm_config.get_api_key())
+        self.llm = LlmInferenceEngine(LlmInfTypes.OPENAI, api_key = self.app_config.get_api_key())
 
         self.tokens_used_total = 0
 
@@ -84,8 +89,8 @@ class ArgusWebsearch():
         self.conversation_stage1 = Conversation()
 
         # System role information
-        self.conversation_stage1.add_message(Message(type=MsgType.SYSTEM, msg = f"This is an application that formulates {stage_1_depth} websearch input queries based on the given input.\n"))
-        self.conversation_stage1.add_message(Message(type=MsgType.SYSTEM, msg = f"All {stage_1_depth} queries are different and each one focuses on another aspect given in the user input.\n"))
+        self.conversation_stage1.add_message(Message(type=MsgType.SYSTEM, msg = f"This is an application that formulates {self.stage_1_depth} websearch input queries based on the given input.\n"))
+        self.conversation_stage1.add_message(Message(type=MsgType.SYSTEM, msg = f"All {self.stage_1_depth} queries are different and each one focuses on another aspect given in the user input.\n"))
         self.conversation_stage1.add_message(Message(type=MsgType.SYSTEM, msg = "All queries should not be longer than absolutely necessary.\n"))
         self.conversation_stage1.add_message(Message(type=MsgType.SYSTEM, msg = "The query with the highest overall relevancy for the search topic should be the first one in the output.\n"))
         self.conversation_stage1.add_message(Message(type=MsgType.SYSTEM, msg = "The application respects the following rules of formulating a perfect websearch query which are separated by ## :\n"))
@@ -156,7 +161,7 @@ class ArgusWebsearch():
             ]"""
             tokens_used_stage1 = 500
         else:
-            text_out, tokens_used_stage1 = self.llm.run_inference(self.conversation_stage1.create_prompt_dict(), self.llm_config.get_config())
+            text_out, tokens_used_stage1 = self.llm.run_inference(self.conversation_stage1.create_prompt_dict(), self.llm_conf)
 
         # Parse JSON output
         tmp_json_result = json.loads(text_out)
@@ -186,7 +191,7 @@ class ArgusWebsearch():
 
         for query in queries:
 
-            urls_tmp = search(query, tld="co.in", num=stage_2_depth, stop=stage_2_depth)
+            urls_tmp = search(query, tld="co.in", num=self.stage_2_depth, stop=self.stage_2_depth)
             urls_tmp = list(urls_tmp)
 
             for url in urls_tmp:
@@ -222,7 +227,7 @@ class ArgusWebsearch():
 
             i += 1
 
-        text_splitter_text = RecursiveCharacterTextSplitter(chunk_size=stage_3_chunksize, chunk_overlap=100)
+        text_splitter_text = RecursiveCharacterTextSplitter(chunk_size=self.stage_3_chunksize, chunk_overlap=100)
         source_docs_urls = text_splitter_text.split_documents(new_doc)
 
         # print(source_docs_urls[1])
@@ -242,7 +247,7 @@ class ArgusWebsearch():
 
         query_num = 1
         for query in queries:
-            tmp_results = self.vectorstore.similarity_search(query, k=stage_3_depth)
+            tmp_results = self.vectorstore.similarity_search(query, k=self.stage_3_depth)
             for res in tmp_results:
                 rag_aggregated_results.append([res.metadata['url'], res.page_content])
 
@@ -299,7 +304,7 @@ class ArgusWebsearch():
 
         # Inference stage 4
         text_out = ""
-        text_out, tokens_used_stage4 = self.llm.run_inference(self.conversation_stage4.create_prompt_dict(), self.llm_config.get_config())
+        text_out, tokens_used_stage4 = self.llm.run_inference(self.conversation_stage4.create_prompt_dict(), self.llm_conf)
 
         # Add answer to conversation
         self.conversation_stage4.add_message(Message(type=MsgType.ASSISTANT, msg = text_out), finish_sequence=True)
@@ -311,15 +316,23 @@ class ArgusWebsearch():
 
     def run_full_research(self, input_prompt:str) -> str:
 
+        # Generate queries
         generated_queries, tokens_stage1 = self.run_stage1(prompt=input_prompt)
 
+        # Search website and crawl website content
         website_content = self.run_stage2(queries=generated_queries)
 
+        # Generate vecstore, query it and return the context
         self.rag_context = self.run_stage3(content=website_content, queries=generated_queries)
 
+        # Summarize the context and answer the question
         llm_output, tokens_stage4 = self.run_stage4(context=self.rag_context, prompt=input_prompt)
 
         self.tokens_used_total = self.llm.token_used_total
+
+        # Output the converstion object for debugging
+        if self.conversation_conf['enable_debug_output_cli']:
+            print(self.conversation_stage4.output_msg_store_cli())
 
         return llm_output, self.tokens_used_total
     
@@ -329,10 +342,14 @@ class ArgusWebsearch():
         self.conversation_stage4.add_message(Message(type=MsgType.USER, msg = input_prompt))
 
         # Run inference
-        llm_output, tokens_actual = self.llm.run_inference(self.conversation_stage4.create_prompt_dict(), self.llm_config.get_config())
+        llm_output, tokens_actual = self.llm.run_inference(self.conversation_stage4.create_prompt_dict(), self.llm_conf)
         self.conversation_stage4.add_message(Message(type=MsgType.ASSISTANT, msg = llm_output), finish_sequence=True)
 
         self.tokens_used_total = self.llm.token_used_total
+
+        # Output the converstion object for debugging
+        if self.conversation_conf['enable_debug_output_cli']:
+            print(self.conversation_stage4.output_msg_store_cli())
 
         return llm_output, self.llm.token_used_last
     

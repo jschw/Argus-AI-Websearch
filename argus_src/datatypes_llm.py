@@ -100,3 +100,8 @@ class Conversation():
                 # If message is current sequence num and type 3 = ASSISTANT
                 return msg[1].get_msg()
         return []
+    
+    def output_msg_store_cli(self):
+        for msg in self.messages:
+            print(f"Idx: {msg[0]} , Content: {msg[1].get_dict()}\n")
+

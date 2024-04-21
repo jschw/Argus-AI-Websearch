@@ -137,7 +137,11 @@ class Output(ft.UserControl):
                                                             # bgcolor=ft.colors.BLUE_GREY_100,
                                                             border=ft.border.all(1, ft.colors.GREY))
         
-        delete_relate_buttons = ft.Row([self.relate_button, self.delete_button])
+        # Add delete button only after 1st cycle
+        if self.first_cycle:
+            delete_relate_buttons = ft.Row([self.relate_button])
+        else:
+            delete_relate_buttons = ft.Row([self.relate_button, self.delete_button])
         
         # Create a column layout to arrange the elements
         self.display_view = ft.Column(controls=[ self.controls_row_user, self.controls_row_argus, delete_relate_buttons])
@@ -178,42 +182,50 @@ def main(page: ft.page):
         global first_cycle
         global message_index
 
-        if first_cycle:
-            # Activate wait animation
-            wait_animation = ft.Column(
-                                [ft.ProgressRing(), ft.Text("Diving in the deep space of the internet...")],
-                            )
-            output_column.controls.append(wait_animation)
-            page.update()
+        if text_input.value == "": return
 
+        # Activate wait animation
+        wait_animation = ft.Column(
+                            [ft.ProgressRing(), ft.Text("Diving in the deep space of the internet...")],
+                        )
+        output_column.controls.append(wait_animation)
+        page.update()
+
+        if first_cycle:
             # Send the user input to the Argus Core
-            #output , tokens_used = search_engine.run_full_research(input_prompt=text_input.value)
+            output , tokens_used = search_engine.run_full_research(input_prompt=text_input.value)
 
             # Get context used for answer
-            #sources = search_engine.rag_context
+            sources = search_engine.rag_context
 
-            output = f"HeyHey \n\n| Source no. | URL | \n| --- | --- | \n| 123 | Test |"
+            ''' output = f"HeyHey \n\n| Source no. | URL | \n| --- | --- | \n| 123 | Test |"
             tokens_used = 123
             sources = []
             sources.append(["Test", "123"])
-            sources = DataFrame(sources, columns =['URL', 'Content'])
-
-            
-            # Create a new Output object to display the chatbot response
-            result = Output(
-                                output_text = output,
-                                input_text = text_input.value,
-                                msg_index = message_index,
-                                output_delete = outputDelete,
-                                first_cycle=first_cycle,
-                                sources=sources
-                            )
-            first_cycle = False
+            sources = DataFrame(sources, columns =['URL', 'Content'])'''
 
         else:
-            # TODO
             # Run inference only with current input
-            pass
+            output , tokens_used = search_engine.append_and_run(input_prompt=text_input.value)
+
+            # Init sources since it is not used
+            sources = []
+
+            '''output = f"This is my answer..."
+            tokens_used = 123'''
+
+
+        # Create a new Output object to display the chatbot response
+        result = Output(
+                            output_text = output,
+                            input_text = text_input.value,
+                            msg_index = message_index,
+                            output_delete = outputDelete,
+                            first_cycle=first_cycle,
+                            sources=sources
+                        )
+        
+        first_cycle = False
         
         # Removing wait animation
         output_column.controls.remove(wait_animation)

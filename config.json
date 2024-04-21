@@ -1,5 +1,5 @@
 {
-    "settings": [
+    "llm_settings": [
         {
             "name": "Openai_Inference_Runner",
             "protocol": "tcp",
@@ -16,9 +16,22 @@
             "frequency_penalty": "0.5",
             "vectorstore_path": "../document_store/QDrant_vectorstore_demo",
             "document_context_size": "3",
-            "dump_save_path": "saved_prompts/"
+            "add_full_context_always": "0"
         }
     ],
+
+    "conversation_settings": [
+        {
+            "stage_1_depth": 3,
+            "stage_2_depth": 2,
+            "stage_3_chunksize": 700,
+            "stage_3_depth": 3,
+            "enable_debug_output_cli": "1",
+            "dump_save_path": "saved_prompts/",
+            "add_full_context_always": "0"
+        }
+    ],
+
     "upstream_nodes": [
         {
             "name": "Main_Task",
