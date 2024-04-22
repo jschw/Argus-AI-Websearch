@@ -11,14 +11,15 @@ from pandas import DataFrame
 
 # Define a class called Output that is a subclass of ft.UserControl
 class Output(ft.UserControl):
-    def __init__(self, output_text:str, input_text:str, msg_index:int, output_delete, first_cycle:bool, sources:DataFrame=None):
+    def __init__(self, output_text:str, input_text:str, sequence_num:int, output_delete, output_relate, first_cycle:bool, sources:DataFrame=None):
         super().__init__()
         self.output = output_text 
         self.input = input_text
         self.sources = sources
         self.myoutput_delete = output_delete
+        self.myoutput_relate = output_relate
         self.first_cycle = first_cycle
-        self.msg_index = msg_index
+        self.sequence_num = sequence_num
 
     def build(self):
 
@@ -73,7 +74,7 @@ class Output(ft.UserControl):
         # if self.msg_index != 1:
         self.delete_button = ft.IconButton(ft.icons.DELETE_OUTLINE_SHARP, on_click=self.delete)
 
-        self.relate_button = ft.IconButton(ft.icons.REPLY_ROUNDED, on_click=self.delete)
+        self.relate_button = ft.IconButton(ft.icons.REPLY_ROUNDED, on_click=self.relate)
         
 
         self.md_display = ft.Markdown(
@@ -153,8 +154,12 @@ class Output(ft.UserControl):
         # Call the outputDelete function with the current instance as an argument
         self.myoutput_delete(self)
 
+    def relate(self, e):
+        # Call the outputRelate function with the current instance as an argument
+        self.myoutput_relate(self)
+
     def get_index(self)->int:
-        return self.msg_index
+        return self.sequence_num
 
 
 # Define a main function that sets up the page layout
@@ -163,25 +168,45 @@ def main(page: ft.page):
     page.theme_mode = ft.ThemeMode.LIGHT
     
     global first_cycle
-    global message_index
+    first_cycle = True
 
-    message_index = 0
-    wait_sym_index = 0
+    global sequence_num
+    sequence_num = 0
+
+    # Init Argus core
+    global search_engine
+    search_engine = ArgusWebsearch()
 
     def outputDelete(result):
+        # Remove the specified result from the conversation store
+        print(f"--> Going to delete conversation sequence {result.get_index()}...")
+        search_engine.conversation_stage4.delete_sequence(result.get_index())
+
         # Remove the specified result from the output column
-        print(result.get_index())
         output_column.controls.remove(result)
         
         # Update the page to reflect the changes
         page.update()
 
+        # print(search_engine.conversation_stage4.output_msg_store_cli())
 
-    def btn_clicked(e):
+    def outputRelate(result):
+        # Get sequence num of output element and write it to the text input field
+        text_input.value = f"rel {result.get_index()}>{text_input.value}"
+        page.update()
+        
+    def btn_start_new_clicked(e):
+        global search_engine
+
+        # Reset all storages
+        del search_engine
+        search_engine = ArgusWebsearch()
+
+    def btn_send_clicked(e):
 
         global first_cycle
-        global message_index
-
+        global sequence_num
+ 
         if text_input.value == "": return
 
         # Activate wait animation
@@ -194,11 +219,12 @@ def main(page: ft.page):
         if first_cycle:
             # Send the user input to the Argus Core
             output , tokens_used = search_engine.run_full_research(input_prompt=text_input.value)
+            sequence_num = search_engine.conversation_stage4.sequence_num - 1
 
             # Get context used for answer
             sources = search_engine.rag_context
 
-            ''' output = f"HeyHey \n\n| Source no. | URL | \n| --- | --- | \n| 123 | Test |"
+            '''output = f"HeyHey \n\n| Source no. | URL | \n| --- | --- | \n| 123 | Test |"
             tokens_used = 123
             sources = []
             sources.append(["Test", "123"])
@@ -207,20 +233,23 @@ def main(page: ft.page):
         else:
             # Run inference only with current input
             output , tokens_used = search_engine.append_and_run(input_prompt=text_input.value)
+            sequence_num = search_engine.conversation_stage4.sequence_num - 1
 
             # Init sources since it is not used
             sources = []
 
             '''output = f"This is my answer..."
-            tokens_used = 123'''
+            tokens_used = 123
+            sequence_num += 1'''
 
 
         # Create a new Output object to display the chatbot response
         result = Output(
                             output_text = output,
                             input_text = text_input.value,
-                            msg_index = message_index,
+                            sequence_num = sequence_num,
                             output_delete = outputDelete,
+                            output_relate = outputRelate,
                             first_cycle=first_cycle,
                             sources=sources
                         )
@@ -230,8 +259,6 @@ def main(page: ft.page):
         # Removing wait animation
         output_column.controls.remove(wait_animation)
         page.update()
-
-        message_index += 1
 
         # Add the Output object to the output column
         output_column.controls.append(result)
@@ -243,30 +270,22 @@ def main(page: ft.page):
         page.update()
 
 
-    first_cycle = True
-
     # Create a heading text element
     heading = ft.Text(value="Argus AI Web Research", size=24)
 
     # Create a text input field for user prompts
-    text_input = ft.TextField(hint_text="Enter your prompt", expand=True, multiline=False, on_submit=btn_clicked)
+    text_input = ft.TextField(hint_text="Enter your prompt", expand=True, multiline=False, on_submit=btn_send_clicked)
 
     # Send button
-    send_btn = ft.IconButton(icon=ft.icons.SEND_ROUNDED, on_click=btn_clicked)
+    send_btn = ft.IconButton(icon=ft.icons.SEND_ROUNDED, on_click=btn_send_clicked)
 
     # Restart button
-    new_btn = ft.IconButton(icon=ft.icons.RESTART_ALT_ROUNDED, on_click=btn_clicked)
+    new_btn = ft.IconButton(icon=ft.icons.RESTART_ALT_ROUNDED, on_click=btn_start_new_clicked)
 
     # Create an empty column to hold the output elements
     output_column = ft.ListView(expand=True,
                                     spacing=10,
                                     auto_scroll=True,   )
-
-
-    # Init Argus core
-    search_engine = ArgusWebsearch()
-
-    
 
     page.add(                   heading,
                                 ft.Container(

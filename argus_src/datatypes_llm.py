@@ -51,7 +51,7 @@ class Conversation():
         # general_instructions = Instructions added to each conversation prompt. Type: system
         self.general_instructions = []
         # sequence_num = A counter that represents the current part of the conversation and all its components
-        self.sequence_num = 1
+        self.sequence_num = 0
 
     
     def create_prompt_chatml(self, system_message, messages):
@@ -83,6 +83,18 @@ class Conversation():
     def add_message(self, msg : Message, finish_sequence=False):
         self.messages.append([self.sequence_num, msg])
         if finish_sequence: self.shift_sequence()
+
+    def delete_sequence(self, idx : int):
+        self.messages = list(filter(lambda a: a[0] != idx, self.messages))
+
+        '''i = 0
+        for msg in self.messages:
+            if msg[0] == idx:
+                
+                print("deleted 1 msg")
+                print(msg[0])
+            i += 1'''
+
 
     def shift_sequence(self):
         self.sequence_num += 1
