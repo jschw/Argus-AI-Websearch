@@ -190,9 +190,9 @@ def main(page: ft.page):
 
         # print(search_engine.conversation_stage4.output_msg_store_cli())
 
-    def outputRelate(result):
+    def outputRefer(result):
         # Get sequence num of output element and write it to the text input field
-        text_input.value = f"rel {result.get_index()}>{text_input.value}"
+        text_input.value = f">> Refer to {result.get_index()}: {text_input.value}"
         page.update()
         
     def btn_start_new_clicked(e):
@@ -216,58 +216,70 @@ def main(page: ft.page):
         output_column.controls.append(wait_animation)
         page.update()
 
-        if first_cycle:
-            # Send the user input to the Argus Core
-            output , tokens_used = search_engine.run_full_research(input_prompt=text_input.value)
-            sequence_num = search_engine.conversation_stage4.sequence_num - 1
 
-            # Get context used for answer
-            sources = search_engine.rag_context
+        # Send the user input to the Argus Core
+        output = search_engine.run_task(input_prompt=text_input.value)
+  
+        # Test output
+        '''output = f"HeyHey \n\n| Source no. | URL | \n| --- | --- | \n| 123 | Test |"
+        tokens_used = 123
+        sources = []
+        sources.append(["Test", "123"])
+        sources = DataFrame(sources, columns =['URL', 'Content'])'''
 
-            '''output = f"HeyHey \n\n| Source no. | URL | \n| --- | --- | \n| 123 | Test |"
-            tokens_used = 123
-            sources = []
-            sources.append(["Test", "123"])
-            sources = DataFrame(sources, columns =['URL', 'Content'])'''
+        '''output = f"This is my answer..."
+        tokens_used = 123
+        sequence_num += 1'''
+
+        print(output)
+
+        if output[0] == "load":
+            # Load existing conversation
+            print("UI loading...")
+
+            # Removing wait animation
+            output_column.controls.remove(wait_animation)
+            # Clear the text input field
+            text_input.value = ""
+            page.update()
 
         else:
-            # Run inference only with current input
-            output , tokens_used = search_engine.append_and_run(input_prompt=text_input.value)
+            # Continue conversation
+
+            if first_cycle:
+                # Get context used for answer
+                sources = search_engine.rag_context
+            else:
+                # Init sources since it is not used
+                sources = []
+
             sequence_num = search_engine.conversation_stage4.sequence_num - 1
 
-            # Init sources since it is not used
-            sources = []
+            # Create a new Output object to display the chatbot response
+            result = Output(
+                                output_text = output[1][0],
+                                input_text = text_input.value,
+                                sequence_num = sequence_num,
+                                output_delete = outputDelete,
+                                output_relate = outputRefer,
+                                first_cycle=first_cycle,
+                                sources=sources
+                            )
+            
+            first_cycle = False
+            
+            # Removing wait animation
+            output_column.controls.remove(wait_animation)
+            page.update()
 
-            '''output = f"This is my answer..."
-            tokens_used = 123
-            sequence_num += 1'''
-
-
-        # Create a new Output object to display the chatbot response
-        result = Output(
-                            output_text = output,
-                            input_text = text_input.value,
-                            sequence_num = sequence_num,
-                            output_delete = outputDelete,
-                            output_relate = outputRelate,
-                            first_cycle=first_cycle,
-                            sources=sources
-                        )
-        
-        first_cycle = False
-        
-        # Removing wait animation
-        output_column.controls.remove(wait_animation)
-        page.update()
-
-        # Add the Output object to the output column
-        output_column.controls.append(result)
-        
-        # Clear the text input field
-        text_input.value = ""
-        
-        # Update the page to reflect the changes
-        page.update()
+            # Add the Output object to the output column
+            output_column.controls.append(result)
+            
+            # Clear the text input field
+            text_input.value = ""
+            
+            # Update the page to reflect the changes
+            page.update()
 
 
     # Create a heading text element

@@ -87,14 +87,8 @@ class Conversation():
     def delete_sequence(self, idx : int):
         self.messages = list(filter(lambda a: a[0] != idx, self.messages))
 
-        '''i = 0
-        for msg in self.messages:
-            if msg[0] == idx:
-                
-                print("deleted 1 msg")
-                print(msg[0])
-            i += 1'''
-
+    def get_sequence(self, idx : int):
+        return filter(lambda a: a[0] == idx, self.messages)
 
     def shift_sequence(self):
         self.sequence_num += 1

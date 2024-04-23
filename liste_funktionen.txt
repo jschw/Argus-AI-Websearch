@@ -21,3 +21,20 @@ Funktionen:
 - PDF hinzufügen, manuell -> Zu Vecstore hinzufügen (addTexts)
 
 - Neuen Prompt beziehen auf bestimmte Antwort
+
+
+Testprompts:
+
+- How will the weather be tomorrow in Schwäbisch Hall?
+    -Re-Formulate in markdown and convert °F to °C.
+
+- How to make a smoothie?
+
+
+TODO:
+
+- Vectorstore-Erstellung und -abfrage rausziehen und separat machen
+- Simulationsfunktion für LLM bauen
+- Timestamp etc. in Conversation speichern
+- Alles rücksetzen Funktion in UI umsetzen
+- Refer Button testen, geht noch nicht richtig, immer 0

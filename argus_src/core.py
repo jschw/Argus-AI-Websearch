@@ -36,25 +36,26 @@ from langchain_community.document_transformers import Html2TextTransformer  # re
 # https://www.gaijin.at/en/infos/unicode-character-table-dingbats#U2700
 
 
-# ==== Settings ====
-
-# os.environ['HF_TOKEN'] = "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"
-# os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-enableVerboseOutput = True
-enable_context = True
-
-config_file = "config.json"
-
-enableDryRun = False
-
 class ArgusWebsearch():
 
     def __init__(self):
 
+        # ==== Settings ====
+
+        # os.environ['HF_TOKEN'] = "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"
+        # os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+        self.enableVerboseOutput = True
+        self.enable_context = True
+
+        self.config_file = "config.json"
+
+        self.enableDryRun = False
+        self.firstCycle = True
+
         # ==== Load configuration file ====
 
-        self.app_config = LlmConfiguration(config_file)
+        self.app_config = LlmConfiguration(self.config_file)
         self.conversation_conf = self.app_config.get_conversation_config()
         self.llm_conf = self.app_config.get_llm_config()
 
@@ -83,10 +84,11 @@ class ArgusWebsearch():
 
         self.rag_context = None
 
+        self.conversation_stage1 = Conversation()
+        self.conversation_stage4 = Conversation()
+
 
     def run_stage1(self, prompt:str) -> list:
-        # Create conversation object for stage 1
-        self.conversation_stage1 = Conversation()
 
         # System role information
         self.conversation_stage1.add_message(Message(type=MsgType.SYSTEM, msg = f"This is an application that formulates {self.stage_1_depth} websearch input queries based on the given input.\n"))
@@ -134,7 +136,7 @@ class ArgusWebsearch():
         self.conversation_stage1.add_message(Message(type=MsgType.USER, msg = prompt), finish_sequence=True)
 
         # Inference stage 1
-        if enableDryRun:
+        if self.enableDryRun:
             # Dryrun
             text_out = """[
                 {
@@ -171,7 +173,7 @@ class ArgusWebsearch():
             generated_search_queries.append(doc['search_query'])
 
         # Debug output of parsed JSON
-        if enableVerboseOutput:
+        if self.enableVerboseOutput:
             print("--> Generated search queries: ")
             i = 1
             for query in generated_search_queries:
@@ -197,7 +199,7 @@ class ArgusWebsearch():
             for url in urls_tmp:
                 result_urls.append(url)
 
-        if enableVerboseOutput:
+        if self.enableVerboseOutput:
             print("--> Top rated result URLs:\n")
             url_num = 1
             for url in result_urls:
@@ -251,7 +253,7 @@ class ArgusWebsearch():
             for res in tmp_results:
                 rag_aggregated_results.append([res.metadata['url'], res.page_content])
 
-            if enableVerboseOutput:
+            if self.enableVerboseOutput:
                 print(f"--> Performing search for query {query_num}: '{query_num}'")
 
             query_num += 1
@@ -262,7 +264,7 @@ class ArgusWebsearch():
         # Delete duplicate chunks
         df_rag_aggregated_results.drop_duplicates(subset=['Content'], keep='first', inplace=True, ignore_index=True)
 
-        if enableVerboseOutput:
+        if self.enableVerboseOutput:
             print(df_rag_aggregated_results)
             df_rag_aggregated_results.to_csv('RAG_output.csv')
 
@@ -273,8 +275,6 @@ class ArgusWebsearch():
 
     def run_stage4(self, context:DataFrame, prompt:str) -> str:
         # ======== Stage 4 - Performing Task of original prompt ==========
-
-        self.conversation_stage4 = Conversation()
 
         # System role information
         self.conversation_stage4.add_message(Message(type=MsgType.SYSTEM, msg = "This is a helpful assistant that compiles information, answers questions or generally carries out what is requested in the user input.\n"))
@@ -336,7 +336,6 @@ class ArgusWebsearch():
 
         return llm_output, self.tokens_used_total
     
-
     def append_and_run(self, input_prompt:str) -> str:
         # Add new input to conversation
         self.conversation_stage4.add_message(Message(type=MsgType.USER, msg = input_prompt))
@@ -359,3 +358,41 @@ class ArgusWebsearch():
     def get_last_output(self,) -> str:
         return self.conversation_stage4.get_last_output()
 
+    def run_task(self, input_prompt:str) -> list:
+        commands = [
+            ">> Refer to",
+            ">> Save Conversation",
+            ">> Save Conversation PDF",
+            ">> Load Conversation"
+        ]
+
+        # Check if any command is in prompt
+        if any(ext in input_prompt for ext in commands):
+            # Command found -> Separate command and input
+            if commands[0] in input_prompt:
+                # >> Refer to
+                pass
+
+            elif commands[1] in input_prompt:
+                # >> Save Conversation
+                pass
+
+            elif commands[2] in input_prompt:
+                # >> Save Conversation PDF
+                pass
+
+            elif commands[3] in input_prompt:
+                # >> Load Conversation
+                self.firstCycle = False
+                print("Load...")
+                return ["load", ""] 
+
+
+        elif self.firstCycle:
+            self.firstCycle = False
+            # If first cycle and no command is detected -> run full research
+            return ["", self.run_full_research(input_prompt)]
+        else:
+            self.firstCycle = False
+            # No command -> Direct run input as prompt
+            return ["", self.append_and_run(input_prompt)]
