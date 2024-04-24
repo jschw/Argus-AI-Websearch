@@ -81,12 +81,31 @@ class ArgusWebsearch():
         self.tokens_used_total = 0
 
         self.vectorstore = None
+        self.embeddings = None
 
         self.rag_context = None
 
         self.conversation_stage1 = Conversation()
         self.conversation_stage4 = Conversation()
 
+        # Run init functions
+        self.init_vectorstore()
+
+    
+    def init_vectorstore(self):
+        self.embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+
+    def update_vectore(self, doc_content):
+        # Create on-memory Qdrant instance from website content
+        return Qdrant.from_documents(
+            doc_content,
+            self.embeddings, 
+            location = ":memory:",
+            collection_name="websearch_results",
+        )
+
+    def query_vecstore(self, instance, query:str, samples:int) -> list:
+        return instance.similarity_search(query, k=samples)
 
     def run_stage1(self, prompt:str) -> list:
 
@@ -234,22 +253,14 @@ class ArgusWebsearch():
 
         # print(source_docs_urls[1])
 
-        embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
-
-        # Create on-memory Qdrant instance from website content
-        self.vectorstore = Qdrant.from_documents(
-            source_docs_urls,
-            embeddings, 
-            location = ":memory:",
-            collection_name="websearch_results",
-        )
+        self.vectorstore = self.update_vectore(source_docs_urls)
 
         # Get RAG input documents for each search query
         rag_aggregated_results = []
 
         query_num = 1
         for query in queries:
-            tmp_results = self.vectorstore.similarity_search(query, k=self.stage_3_depth)
+            tmp_results = self.query_vecstore(self.vectorstore, query, self.stage_3_depth)
             for res in tmp_results:
                 rag_aggregated_results.append([res.metadata['url'], res.page_content])
 

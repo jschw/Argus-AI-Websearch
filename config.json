@@ -8,7 +8,7 @@
             "port_logger": "6514",
             "enable_dryrun": "1",
             "debug_output_cli": "1",
-            "api_key": "api_key",
+            "api_key": "key",
             "model_name": "gpt-3.5-turbo",
             "max_tokens": "450",
             "temperature": "1.0",
