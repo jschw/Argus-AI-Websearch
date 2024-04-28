@@ -18,12 +18,12 @@ def generate_structured_table(table):
 
     return str(tabulate(values,tablefmt="github"))
 
-def crawl_website(url: str) -> str :
+def crawl_website(url: str, timeout: int) -> str :
     DEFAULT_TARGET_CONTENT = ['article', 'div', 'main', 'p']
 
     try:
         print(f'- Crawling: {url}')
-        response = requests.get(url)
+        response = requests.get(url, timeout=timeout)
     except requests.exceptions.RequestException as e:
         print(f'❌ Request error for {url}: {e}')
         return None

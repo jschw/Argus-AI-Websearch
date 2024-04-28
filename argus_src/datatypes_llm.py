@@ -4,6 +4,7 @@ class MsgType(IntEnum):
     SYSTEM = 1
     USER = 2
     ASSISTANT = 3
+    CONTEXT = 4
 
 class Message():
     def __init__(self, type: MsgType, msg):
@@ -11,7 +12,7 @@ class Message():
         self.type_int = int(type)
         self.flags = []
 
-        if self.type_int == 1:
+        if self.type_int == (1 or 4):
             self.type_str = "system"
         elif self.type_int == 2:
             self.type_str = "user"
@@ -26,14 +27,14 @@ class Message():
         # https://platform.openai.com/docs/guides/prompt-engineering/tactic-instruct-the-model-to-answer-using-a-reference-text
         pass
 
-    def get_dict(self) -> dict:
-        return {"role": self.type_str, "content": self.content}
-    
     def get_type(self) -> int:
         return self.type_int
     
     def get_msg(self) -> str:
         return self.content
+    
+    def get_dict(self) -> dict:
+        return {"role": self.type_str, "content": self.content}
     
     def get_chatml(self) -> str:
         # TODO
@@ -54,27 +55,33 @@ class Conversation():
         self.sequence_num = 0
 
     
-    def create_prompt_chatml(self, system_message, messages):
+    def create_prompt_chatml(self, sequences=[]):
         # defining the user input and the system message
         # user_input = "<your user input>" 
         # system_message = f"<|im_start|>system\n{'<your system message>'}\n<|im_end|>"
 
         # creating a list of messages to track the conversation
         # messages = [{"sender": "user", "text": user_input}]
-            
-        prompt = system_message
-        for message in messages:
-            prompt += f"\n<|im_start|>{message['sender']}\n{message['text']}\n<|im_end|>"
-        prompt += "\n<|im_start|>assistant\n"
-        return prompt
+
+        tmp_prompt = ""
+        for msg in self.messages:
+            tmp_prompt += f"\n<|im_start|>{msg['sender']}\n{msg['text']}\n<|im_end|>"
+
+        tmp_prompt += "\n<|im_start|>assistant\n"
+        return tmp_prompt
     
-    def create_prompt_dict(self, sequences=[]):
+    def create_prompt_dict(self, sequences=[], exclude_context=True):
         tmp_prompt = []
         for msg in self.messages:
-
+            
+            # Check if sequence filter is set
             if len(sequences) > 0:
                 if msg[0] not in sequences:
                     continue
+
+            # Check if context messages should be excluded
+            if exclude_context and msg[1].get_type() == 4:
+                continue
 
             tmp_prompt.append(msg[1].get_dict())
 

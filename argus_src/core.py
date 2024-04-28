@@ -16,9 +16,7 @@ import nest_asyncio
 
 import os
 import sys
-
 import json
-
 import time
 
 import openai
@@ -84,6 +82,8 @@ class ArgusWebsearch():
         self.conversation_conf      = self.app_config.get_conversation_config()
         self.llm_conf               = self.app_config.get_llm_config()
         self.vectorstore_conf       = self.app_config.get_vectorstore_config()
+
+        self.webcrawler_timeout     = self.app_config.config_store['general_settings'][0]['webcrawler_timeout']
 
         # ==== Load configuration parameters =====
 
@@ -304,7 +304,6 @@ class ArgusWebsearch():
 
         return generated_search_queries, self.llm.token_used_last
 
-
     def run_stage2(self, queries:list) -> list :
         # Perform websearch with the generated queries -> google
         result_urls = []
@@ -329,7 +328,7 @@ class ArgusWebsearch():
         content_list = []
 
         for url in result_urls:
-            tmp_website_content = crawl_website(url=url)
+            tmp_website_content = crawl_website(url=url, timeout=self.webcrawler_timeout)
             if tmp_website_content != None:
                 content_list.append([url, tmp_website_content, time.time()])
 
@@ -381,15 +380,14 @@ class ArgusWebsearch():
 
         return df_rag_aggregated_results
 
-
     def run_stage4(self, context:DataFrame, prompt:str) -> str:
         # ======== Stage 4 - Performing Task of original prompt ==========
 
         # System role information
         self.conversation_stage4.add_message(Message(type=MsgType.SYSTEM, msg = "This is a helpful assistant that compiles information, answers questions or generally carries out what is requested in the user input.\n"))
         self.conversation_stage4.add_message(Message(type=MsgType.SYSTEM, msg = "The assistant uses the information provided in the following context to perform the task requested in the user input.\n"))
-        self.conversation_stage4.add_message(Message(type=MsgType.SYSTEM, msg = "The context contains several pieces of information, which are separated by ## .\n"))
-        self.conversation_stage4.add_message(Message(type=MsgType.SYSTEM, msg = "Each context block contains its number, the source URL and the source content. The source content is the information which should be used to perform the task.\n"))
+        self.conversation_stage4.add_message(Message(type=MsgType.CONTEXT, msg = "The context contains several pieces of information, which are separated by ## .\n"))
+        self.conversation_stage4.add_message(Message(type=MsgType.CONTEXT, msg = "Each context block contains its number, the source URL and the source content. The source content is the information which should be used to perform the task.\n"))
 
         tmp_str = "Context:"
 
@@ -401,11 +399,11 @@ class ArgusWebsearch():
             tmp_str += f"Source Content: {doc['Content']}\n"
 
         # Add information context
-        self.conversation_stage4.add_message(Message(type=MsgType.SYSTEM, msg =  tmp_str))
+        self.conversation_stage4.add_message(Message(type=MsgType.CONTEXT, msg =  tmp_str))
 
         # Add formatting instructions
-        self.conversation_stage4.add_message(Message(type=MsgType.SYSTEM, msg = "Provide step by step reasoning and mark all the places in the answer with the numbers of the information used.\n"))
-        self.conversation_stage4.add_message(Message(type=MsgType.SYSTEM, msg = "Do not refer to the source directly or output its URL, only output the number of the source in brackets like (2).\n"))
+        self.conversation_stage4.add_message(Message(type=MsgType.CONTEXT, msg = "Provide step by step reasoning and mark all the places in the answer with the numbers of the information used.\n"))
+        self.conversation_stage4.add_message(Message(type=MsgType.CONTEXT, msg = "Do not refer to the source directly or output its URL, only output the number of the source in brackets like (2).\n"))
         self.conversation_stage4.add_message(Message(type=MsgType.SYSTEM, msg = "Provide a continuous text with linebreaks in a scientific tone.\n"))
 
         # Add user question                 
@@ -413,7 +411,7 @@ class ArgusWebsearch():
 
         # Inference stage 4
         text_out = ""
-        text_out, tokens_used_stage4 = self.llm.run_inference(self.conversation_stage4.create_prompt_dict(), self.llm_conf)
+        text_out, tokens_used_stage4 = self.llm.run_inference(self.conversation_stage4.create_prompt_dict(exclude_context=False), self.llm_conf)
 
         # Add answer to conversation
         self.conversation_stage4.add_message(Message(type=MsgType.ASSISTANT, msg = text_out), finish_sequence=True)
@@ -450,7 +448,7 @@ class ArgusWebsearch():
         self.conversation_stage4.add_message(Message(type=MsgType.USER, msg = input_prompt))
 
         # Run inference
-        llm_output, tokens_actual = self.llm.run_inference(self.conversation_stage4.create_prompt_dict(), self.llm_conf)
+        llm_output, tokens_actual = self.llm.run_inference(self.conversation_stage4.create_prompt_dict(exclude_context=True), self.llm_conf)
         self.conversation_stage4.add_message(Message(type=MsgType.ASSISTANT, msg = llm_output), finish_sequence=True)
 
         self.tokens_used_total = self.llm.token_used_total

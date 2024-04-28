@@ -231,8 +231,6 @@ def main(page: ft.page):
         tokens_used = 123
         sequence_num += 1'''
 
-        print(output)
-
         if output[0] == "load":
             # Load existing conversation
             print("UI loading...")

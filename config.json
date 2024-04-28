@@ -1,4 +1,10 @@
 {
+    "general_settings": [
+        {
+            "webcrawler_timeout": 5
+        }
+    ],
+
     "llm_settings": [
         {
             "name": "Openai_Inference_Runner",
