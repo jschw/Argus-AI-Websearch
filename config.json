@@ -14,9 +14,16 @@
             "temperature": "1.0",
             "top_p": "0.5",
             "frequency_penalty": "0.5",
-            "vectorstore_path": "../document_store/QDrant_vectorstore_demo",
             "document_context_size": "3",
             "add_full_context_always": "0"
+        }
+    ],
+
+    "vectorstore_settings": [
+        {
+            "vectorstore_path": "../document_store/QDrant_vectorstore_demo",
+            "vectorstore_chunksize": 700,
+            "vectorstore_embedding_model": "nomic-ai/nomic-embed-text-v1"
         }
     ],
 
@@ -24,9 +31,8 @@
         {
             "stage_1_depth": 3,
             "stage_2_depth": 2,
-            "stage_3_chunksize": 700,
             "stage_3_depth": 3,
-            "enable_debug_output_cli": "1",
+            "enable_debug_output_cli": "0",
             "dump_save_path": "saved_prompts/",
             "add_full_context_always": "0"
         }

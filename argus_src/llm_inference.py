@@ -28,11 +28,17 @@ class LlmConfiguration():
         return {
                     "stage_1_depth": int(self.config_store['conversation_settings'][0]['stage_1_depth']),
                     "stage_2_depth": int(self.config_store['conversation_settings'][0]['stage_2_depth']),
-                    "stage_3_chunksize": int(self.config_store['conversation_settings'][0]['stage_3_chunksize']),
                     "stage_3_depth": int(self.config_store['conversation_settings'][0]['stage_3_depth']),
                     "enable_debug_output_cli": bool(int(self.config_store['conversation_settings'][0]['enable_debug_output_cli'])),
                     "add_full_context": bool(int(self.config_store['conversation_settings'][0]['add_full_context_always'])),
                     "dump_save_path": self.config_store['conversation_settings'][0]['dump_save_path'],
+                }
+    
+    def get_vectorstore_config(self) -> dict:
+        return {
+                    "vectorstore_chunksize": int(self.config_store['vectorstore_settings'][0]['vectorstore_chunksize']),
+                    "vectorstore_embedding_model": self.config_store['vectorstore_settings'][0]['vectorstore_embedding_model'],
+                    "vectorstore_path": self.config_store['vectorstore_settings'][0]['vectorstore_path']
                 }
     
     def get_api_key(self) -> str:

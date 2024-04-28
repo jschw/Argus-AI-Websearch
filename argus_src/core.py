@@ -19,10 +19,13 @@ import sys
 
 import json
 
+import time
+
 import openai
 
 import langchain
-from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter, Document, MarkdownHeaderTextSplitter
+from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter, MarkdownHeaderTextSplitter
+from langchain_core.documents import Document
 
 from langchain_community.vectorstores import Qdrant  # requirements: pip install qdrant-client
 from langchain_openai import OpenAIEmbeddings
@@ -31,6 +34,16 @@ from langchain_community.embeddings import HuggingFaceEmbeddings, SentenceTransf
 
 from langchain_community.document_loaders import AsyncChromiumLoader # requirements: pip install playwright / playwright install
 from langchain_community.document_transformers import Html2TextTransformer  # requirements: pip install html2text
+
+import pdfplumber, re
+from tqdm import tqdm
+from transformers import AutoTokenizer  # requirements: pip install einops
+from qdrant_client import QdrantClient, models
+from tqdm import tqdm
+from datasets import Dataset
+from itertools import islice
+from sentence_transformers import SentenceTransformer
+import torch 
 
 # Unicode-Symboltabelle:
 # https://www.gaijin.at/en/infos/unicode-character-table-dingbats#U2700
@@ -53,11 +66,24 @@ class ArgusWebsearch():
         self.enableDryRun = False
         self.firstCycle = True
 
+        # ==== Vectorstore Settings ====
+
+        self.chunk_size = 500 # length of text chunks
+        self.embedding_batch_size = 5 # how many example to process in one batch
+        self.max_length = 2048 # max length of input to the embedding model must be >= chunk_size
+        self.distance_metric = models.Distance.COSINE
+        # distance Measurement Options:
+        # COSINE = "Cosine"
+        # EUCLID = "Euclid"
+        # DOT = "Dot"
+        # MANHATTAN = "Manhattan"
+
         # ==== Load configuration file ====
 
-        self.app_config = LlmConfiguration(self.config_file)
-        self.conversation_conf = self.app_config.get_conversation_config()
-        self.llm_conf = self.app_config.get_llm_config()
+        self.app_config             = LlmConfiguration(self.config_file)
+        self.conversation_conf      = self.app_config.get_conversation_config()
+        self.llm_conf               = self.app_config.get_llm_config()
+        self.vectorstore_conf       = self.app_config.get_vectorstore_config()
 
         # ==== Load configuration parameters =====
 
@@ -68,7 +94,6 @@ class ArgusWebsearch():
 
         self.stage_1_depth = self.conversation_conf['stage_1_depth']  # Generate 3 search queries
         self.stage_2_depth = self.conversation_conf['stage_2_depth']  # Load 5 top rated websites
-        self.stage_3_chunksize = self.conversation_conf['stage_3_chunksize']  # Size of each content chunk is 500 Token
         self.stage_3_depth = self.conversation_conf['stage_3_depth']  # Add 3 chunks of each vecstore search result to content.
                         # Example: stage_3_depth * stage_3_depth = chunk count in context
                         # Example: 3 * 3 = 9 chunks * 500 token = 4500 token context
@@ -80,9 +105,6 @@ class ArgusWebsearch():
 
         self.tokens_used_total = 0
 
-        self.vectorstore = None
-        self.embeddings = None
-
         self.rag_context = None
 
         self.conversation_stage1 = Conversation()
@@ -91,21 +113,98 @@ class ArgusWebsearch():
         # Run init functions
         self.init_vectorstore()
 
-    
-    def init_vectorstore(self):
-        self.embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    def load_vectorstore(self, local_path:str):
+        # Load a previously saved vectorstore
+        pass
 
-    def update_vectore(self, doc_content):
-        # Create on-memory Qdrant instance from website content
-        return Qdrant.from_documents(
-            doc_content,
-            self.embeddings, 
-            location = ":memory:",
-            collection_name="websearch_results",
+    def init_vectorstore(self):
+        distance_metric = models.Distance.COSINE
+        # distance Measurement Options:
+        # COSINE = "Cosine"
+        # EUCLID = "Euclid"
+        # DOT = "Dot"
+        # MANHATTAN = "Manhattan"
+
+        self.model = SentenceTransformer(
+            self.vectorstore_conf['vectorstore_embedding_model'], 
+            device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"),
+            trust_remote_code=True,
+            
+        )
+        self.model.max_seq_length = self.max_length # to prevent OOM Error
+
+        self.qdrant_client = QdrantClient(":memory:")
+
+        self.qdrant_client.create_collection(
+            collection_name="documents",
+            vectors_config=models.VectorParams(
+                size=self.model.get_sentence_embedding_dimension(),
+                distance=distance_metric,
+            ),
         )
 
-    def query_vecstore(self, instance, query:str, samples:int) -> list:
-        return instance.similarity_search(query, k=samples)
+    def update_vectore(self, doc_content:list[Document]):
+        # Create on-memory Qdrant instance from website content
+        texts = []
+        urls = []
+        timestamps = []
+        for doc in doc_content:
+            texts.append(doc.page_content)
+            urls.append(doc.metadata['url'])
+            timestamps.append(doc.metadata['timestamp'])
+
+        # Generate HuggingFace Dataset from Data
+        ds = Dataset.from_dict({"text":texts,"url":urls,"timestamp":timestamps})
+
+        def generate_embeddings(ds, batch_size=5):
+            embeddings = []
+            for i in tqdm(range(0, len(ds), batch_size)):
+                batch_sentences = ds['text'][i:i+batch_size]
+                batch_sentences = [f"search_document: {text}" for text in batch_sentences]
+                batch_embeddings = self.model.encode(batch_sentences)
+                embeddings.extend(batch_embeddings)            
+            return embeddings
+        
+        # Generate embeddings and add to dataset
+        embeddings = generate_embeddings(ds)
+        ds = ds.add_column("embeddings", embeddings)
+        ds = ds.add_column("ids",[i for i in range(len(ds))]) # necessary for Qdrant Store
+
+        # Update qdrant vectorstore -> Add dataset
+        def batched(iterable, n):
+            iterator = iter(iterable)
+            while batch := list(islice(iterator, n)):
+                yield batch
+
+        batch_size = 100
+
+        for batch in batched(ds, batch_size):
+            ids = [point.pop("ids") for point in batch]
+            vectors = [point.pop("embeddings") for point in batch]
+
+            self.qdrant_client.upsert(
+                collection_name="documents",
+                points=models.Batch(
+                    ids=ids,
+                    vectors=vectors,
+                    payloads=batch,
+                ),
+            )
+
+    def query_vecstore(self, query:str, samples:int, min_score:float=0.5) -> list:
+        # result structure: dict{text,url,timestamp}
+        results = self.qdrant_client.search(
+            collection_name="documents",
+            query_vector=self.model.encode(f"search_query: {query}").tolist(),
+            limit=samples
+        )
+
+        results_filtered = []
+        for result in results:
+            if result.score >= min_score:
+                results_filtered.append([result.payload['url'], result.payload['text'], result.payload['timestamp'], result.score])
+
+        return results_filtered
 
     def run_stage1(self, prompt:str) -> list:
 
@@ -232,7 +331,7 @@ class ArgusWebsearch():
         for url in result_urls:
             tmp_website_content = crawl_website(url=url)
             if tmp_website_content != None:
-                content_list.append([url, tmp_website_content])
+                content_list.append([url, tmp_website_content, time.time()])
 
         print(f"\n==> Finished stage 2\n")
 
@@ -244,11 +343,11 @@ class ArgusWebsearch():
 
         i = 0
         for doc in content:
-            new_doc.append(Document(page_content=doc[1], metadata={'url': doc[0]}, type="Document"))
+            new_doc.append(Document(page_content=doc[1], metadata={'url': doc[0], 'timestamp': doc[2]}, type="Document"))
 
             i += 1
 
-        text_splitter_text = RecursiveCharacterTextSplitter(chunk_size=self.stage_3_chunksize, chunk_overlap=100)
+        text_splitter_text = RecursiveCharacterTextSplitter(chunk_size=self.vectorstore_conf['vectorstore_chunksize'], chunk_overlap=100)
         source_docs_urls = text_splitter_text.split_documents(new_doc)
 
         # print(source_docs_urls[1])
@@ -260,9 +359,8 @@ class ArgusWebsearch():
 
         query_num = 1
         for query in queries:
-            tmp_results = self.query_vecstore(self.vectorstore, query, self.stage_3_depth)
-            for res in tmp_results:
-                rag_aggregated_results.append([res.metadata['url'], res.page_content])
+            # result structure: list[url, text, timestamp, score]
+            rag_aggregated_results = self.query_vecstore(query, self.stage_3_depth)
 
             if self.enableVerboseOutput:
                 print(f"--> Performing search for query {query_num}: '{query_num}'")
@@ -270,7 +368,7 @@ class ArgusWebsearch():
             query_num += 1
 
         # Convert list to pandas dataframe
-        df_rag_aggregated_results = pd.DataFrame(rag_aggregated_results, columns =['URL', 'Content'])
+        df_rag_aggregated_results = pd.DataFrame(rag_aggregated_results, columns =['URL', 'Content', 'Timestamp', 'Score'])
 
         # Delete duplicate chunks
         df_rag_aggregated_results.drop_duplicates(subset=['Content'], keep='first', inplace=True, ignore_index=True)

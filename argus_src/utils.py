@@ -6,7 +6,17 @@ from pypdf import PdfReader
 
 import time
 from pathlib import Path
+import tabulate
 
+# Generated Strucutred Tabels from pdfplumber tables
+def generate_structured_table(table):
+    values = [[e for e in tab if e is not None and e !=""] for tab in table]
+    columns = max([len(line) for line in values])
+
+    for val in values:
+        val.extend([""]*(columns-len(val)))
+
+    return str(tabulate(values,tablefmt="github"))
 
 def crawl_website(url: str) -> str :
     DEFAULT_TARGET_CONTENT = ['article', 'div', 'main', 'p']
