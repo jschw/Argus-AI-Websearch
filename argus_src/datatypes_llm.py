@@ -1,4 +1,6 @@
 from enum import IntEnum
+from datetime import datetime
+import time
 
 class MsgType(IntEnum):
     SYSTEM = 1
@@ -7,10 +9,10 @@ class MsgType(IntEnum):
     CONTEXT = 4
 
 class Message():
-    def __init__(self, type: MsgType, msg):
+    def __init__(self, type: MsgType, msg: str, timestamp: int = int(time.time())):
         self.content = msg
         self.type_int = int(type)
-        self.flags = []
+        self.timestamp = timestamp
 
         if self.type_int == (1 or 4):
             self.type_str = "system"
@@ -21,17 +23,20 @@ class Message():
         else:
             self.type_str = "system"
 
-        self.assets = []
-
-    def add_asset(self, src: list):
-        # https://platform.openai.com/docs/guides/prompt-engineering/tactic-instruct-the-model-to-answer-using-a-reference-text
-        pass
-
     def get_type(self) -> int:
         return self.type_int
     
     def get_msg(self) -> str:
         return self.content
+    
+    def get_timestamp_int(self) -> int:
+        return self.timestamp
+    
+    def get_timestamp_dt(self) -> datetime:
+        return datetime.fromtimestamp(self.timestamp)
+    
+    def get_timestamp_str(self) -> str:
+        return datetime.fromtimestamp(self.timestamp).strftime("%d.%m.%Y, %H:%M:%S")
     
     def get_dict(self) -> dict:
         return {"role": self.type_str, "content": self.content}

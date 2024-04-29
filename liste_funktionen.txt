@@ -30,6 +30,8 @@ Testprompts:
 
 - How to make a smoothie?
 
+- How to grow cannabis on the balcony? Please make a step-by-step manual with all needed things and utilities.
+
 
 TODO:
 

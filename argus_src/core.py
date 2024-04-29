@@ -46,6 +46,9 @@ import torch
 # Unicode-Symboltabelle:
 # https://www.gaijin.at/en/infos/unicode-character-table-dingbats#U2700
 
+# Prompt engineering
+# https://platform.openai.com/docs/guides/prompt-engineering/tactic-instruct-the-model-to-answer-using-a-reference-text
+
 
 class ArgusWebsearch():
 
@@ -114,8 +117,8 @@ class ArgusWebsearch():
         self.init_vectorstore()
 
     def load_vectorstore(self, local_path:str):
-        # Load a previously saved vectorstore
-        pass
+        # Read on-disk qdrant vectorstore
+        self.qdrant_client = QdrantClient(path=local_path, prefer_grpc=True)
 
     def init_vectorstore(self):
         distance_metric = models.Distance.COSINE
@@ -133,10 +136,10 @@ class ArgusWebsearch():
         )
         self.model.max_seq_length = self.max_length # to prevent OOM Error
 
-        self.qdrant_client = QdrantClient(":memory:")
+        self.qdrant_client = QdrantClient(":memory:", prefer_grpc=True)
 
         self.qdrant_client.create_collection(
-            collection_name="documents",
+            collection_name=self.vectorstore_conf['vectorstore_collection'],
             vectors_config=models.VectorParams(
                 size=self.model.get_sentence_embedding_dimension(),
                 distance=distance_metric,
@@ -183,7 +186,7 @@ class ArgusWebsearch():
             vectors = [point.pop("embeddings") for point in batch]
 
             self.qdrant_client.upsert(
-                collection_name="documents",
+                collection_name=self.vectorstore_conf['vectorstore_collection'],
                 points=models.Batch(
                     ids=ids,
                     vectors=vectors,
@@ -330,7 +333,7 @@ class ArgusWebsearch():
         for url in result_urls:
             tmp_website_content = crawl_website(url=url, timeout=self.webcrawler_timeout)
             if tmp_website_content != None:
-                content_list.append([url, tmp_website_content, time.time()])
+                content_list.append([url, tmp_website_content, int(time.time())])
 
         print(f"\n==> Finished stage 2\n")
 
@@ -389,17 +392,19 @@ class ArgusWebsearch():
         self.conversation_stage4.add_message(Message(type=MsgType.CONTEXT, msg = "The context contains several pieces of information, which are separated by ## .\n"))
         self.conversation_stage4.add_message(Message(type=MsgType.CONTEXT, msg = "Each context block contains its number, the source URL and the source content. The source content is the information which should be used to perform the task.\n"))
 
-        tmp_str = "Context:"
+        # tmp_str = "Context:"
 
         for index, doc in context.iterrows():
-            tmp_str += "\n\n##\n"
+            # columns =['URL', 'Content', 'Timestamp', 'Score']
+
+            tmp_str = "\n\n###\n"
             tmp_str += f"Source No: {index+1}\n"
             tmp_str += f"Source URL: {doc['URL']}\n"
 
             tmp_str += f"Source Content: {doc['Content']}\n"
 
-        # Add information context
-        self.conversation_stage4.add_message(Message(type=MsgType.CONTEXT, msg =  tmp_str))
+            # Add information context
+            self.conversation_stage4.add_message(Message(type=MsgType.CONTEXT, msg = tmp_str, timestamp=doc['Timestamp']))
 
         # Add formatting instructions
         self.conversation_stage4.add_message(Message(type=MsgType.CONTEXT, msg = "Provide step by step reasoning and mark all the places in the answer with the numbers of the information used.\n"))
@@ -419,7 +424,6 @@ class ArgusWebsearch():
         print(f"\n==> Finished stage 4, going to output results.\n")
 
         return text_out, self.llm.token_used_last
-
 
     def run_full_research(self, input_prompt:str) -> str:
 

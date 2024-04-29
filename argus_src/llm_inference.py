@@ -38,6 +38,7 @@ class LlmConfiguration():
         return {
                     "vectorstore_chunksize": int(self.config_store['vectorstore_settings'][0]['vectorstore_chunksize']),
                     "vectorstore_embedding_model": self.config_store['vectorstore_settings'][0]['vectorstore_embedding_model'],
+                    "vectorstore_collection": self.config_store['vectorstore_settings'][0]['vectorstore_collection'],
                     "vectorstore_path": self.config_store['vectorstore_settings'][0]['vectorstore_path']
                 }
     

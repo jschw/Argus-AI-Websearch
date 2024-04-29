@@ -29,6 +29,7 @@
         {
             "vectorstore_path": "../document_store/QDrant_vectorstore_demo",
             "vectorstore_chunksize": 700,
+            "vectorstore_collection": "documents",
             "vectorstore_embedding_model": "nomic-ai/nomic-embed-text-v1"
         }
     ],
