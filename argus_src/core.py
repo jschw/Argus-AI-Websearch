@@ -362,7 +362,10 @@ class ArgusWebsearch():
         query_num = 1
         for query in queries:
             # result structure: list[url, text, timestamp, score]
-            rag_aggregated_results = self.query_vecstore(query, self.stage_3_depth)
+            tmp_rag_output = (self.query_vecstore(query, self.stage_3_depth))
+
+            for res in tmp_rag_output:
+                rag_aggregated_results.append(res)
 
             if self.enableVerboseOutput:
                 print(f"--> Performing search for query {query_num}: '{query_num}'")
