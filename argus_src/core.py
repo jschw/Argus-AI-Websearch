@@ -116,6 +116,16 @@ class ArgusWebsearch():
         # Run init functions
         self.init_vectorstore()
 
+    def clear(self):
+        self.firstCycle = True
+        self.conversation_stage1 = Conversation()
+        self.conversation_stage4 = Conversation()
+        self.tokens_used_total = 0
+        self.rag_context = None
+        # Run init functions
+        self.init_vectorstore()
+
+    
     def load_vectorstore(self, local_path:str):
         # Read on-disk qdrant vectorstore
         self.qdrant_client = QdrantClient(path=local_path, prefer_grpc=True)

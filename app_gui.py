@@ -197,10 +197,18 @@ def main(page: ft.page):
         
     def btn_start_new_clicked(e):
         global search_engine
+        global first_cycle
+        global sequence_num
+
+        first_cycle = True
+        sequence_num = 0
+
+        # Delete all UI elements
+        output_column.controls.clear()
+        page.update()
 
         # Reset all storages
-        del search_engine
-        search_engine = ArgusWebsearch()
+        search_engine.clear()
 
     def btn_send_clicked(e):
 
